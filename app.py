@@ -5,9 +5,13 @@ import time
 import tempfile
 import requests
 import subprocess
+import imageio_ffmpeg # New library to provide ffmpeg
 from urllib.parse import quote
 from pypdf import PdfReader
 import docx
+
+# Get the correct path to the ffmpeg executable
+FFMPEG_PATH = imageio_ffmpeg.get_ffmpeg_exe()
 
 # ==========================================
 # 1. MOBILE-RESPONSIVE UI
@@ -79,10 +83,10 @@ def generate_image_and_motion_clip(prompt, output_path, log_box):
     except Exception:
         return False
 
-    # Step 2: Animate Image (Ken Burns Zoom + Fade)
+    # Step 2: Animate Image (Ken Burns Zoom + Fade) using imageio_ffmpeg
     log_box.text("🎥 Applying cinematic motion...")
     cmd = [
-        "ffmpeg", "-y", "-i", img_path,
+        FFMPEG_PATH, "-y", "-i", img_path,
         "-vf", "scale=800:-1,zoompan=z='min(zoom+0.0015,1.5)':d=125:s=720x480:fps=25,fade=t=in:st=0:d=0.5,fade=t=out:st=4.5:d=0.5",
         "-c:v", "libx264", "-preset", "ultrafast", "-crf", "23",
         "-c:a", "aac", "-f", "lavfi", "-i", "anullsrc=channel_layout=stereo:sample_rate=44100",
@@ -108,12 +112,12 @@ def stitch_clips_robust(clip_paths, output_path, log_box):
             safe_path = p.replace('\\', '/')
             f.write(f"file '{safe_path}'\n")
             
-    cmd_concat = ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", list_path, "-c", "copy", output_path]
+    cmd_concat = [FFMPEG_PATH, "-y", "-f", "concat", "-safe", "0", "-i", list_path, "-c", "copy", output_path]
     try:
         subprocess.run(cmd_concat, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except subprocess.CalledProcessError:
         log_box.text("⚠️ Re-encoding for compatibility...")
-        fallback_cmd = ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", list_path, "-c:v", "libx264", "-preset", "ultrafast", "-crf", "23", "-c:a", "aac", output_path]
+        fallback_cmd = [FFMPEG_PATH, "-y", "-f", "concat", "-safe", "0", "-i", list_path, "-c:v", "libx264", "-preset", "ultrafast", "-crf", "23", "-c:a", "aac", output_path]
         subprocess.run(fallback_cmd, check=True)
 
 # ==========================================
