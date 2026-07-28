@@ -60,14 +60,14 @@ def chunk_text_into_scenes(text, target_duration_minutes):
     return scenes
 
 # ==========================================
-# 3. ZERO-CAPITAL IMAGE-TO-VIDEO PIPELINE (NO TOKEN NEEDED)
+# 3. ZERO-CAPITAL IMAGE-TO-VIDEO PIPELINE
 # ==========================================
 def generate_image_and_motion_clip(prompt, output_path, log_box):
     """Generates an AI image via Pollinations and animates it with a Ken Burns effect."""
     
     # Step 1: Generate Image (100% Free, No Token)
     img_url = f"https://image.pollinations.ai/prompt/{quote(prompt)}"
-    log_box.text(f"🖼️ Downloading AI image...")
+    log_box.text("🖼️ Downloading AI image...")
     
     try:
         response = requests.get(img_url, timeout=60)
@@ -80,7 +80,7 @@ def generate_image_and_motion_clip(prompt, output_path, log_box):
         return False
 
     # Step 2: Animate Image (Ken Burns Zoom + Fade)
-    log_box.text(f🎥 Applying cinematic motion...")
+    log_box.text("🎥 Applying cinematic motion...")
     cmd = [
         "ffmpeg", "-y", "-i", img_path,
         "-vf", "scale=800:-1,zoompan=z='min(zoom+0.0015,1.5)':d=125:s=720x480:fps=25,fade=t=in:st=0:d=0.5,fade=t=out:st=4.5:d=0.5",
